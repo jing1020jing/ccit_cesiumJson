@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>理工學院天文台展示成果</title>
+  <!-- Include the CesiumJS JavaScript and CSS files -->
+  <script src="https://cesium.com/downloads/cesiumjs/releases/1.108/Build/Cesium/Cesium.js"></script>
+  <link href="https://cesium.com/downloads/cesiumjs/releases/1.108/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+  
+  <style>body {
+    margin: 0;
+    padding: 0;
+  }
+  
+  .container {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+  }
+  
+  #cesiumContainer {
+    width: 100%;
+    height: 100%;
+  }
+
+  .toolbar-container {
+    position: fixed;
+    top: 1%;
+    left: 210px ;
+    z-index: 990; /* 使工具列於最上層*/
+    background-color: rgba(255, 255, 255, 0.9);
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);   
+    transition: left 0.5s ease;
+
+  }
+  #sidebar {
+    width: 180px;
+    height: 100vh;
+    background-color: #f1f1f1;
+    position: fixed;
+    left: -200px;
+    transition: left 0.5s ease;
+    z-index: 2; /* 將清單浮在地圖上方 */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); 
+  }
+  
+  #sidebar ul {
+    list-style-type: none;
+    padding: 0;
+  }
+  
+  #sidebar ul li {
+    font-size: 20px; /* 設定按鈕的字體大小為18像素 */
+    padding: 9px; /* 設定按鈕的內邊距 */
+    width: 100%; /* 讓按鈕佔據列表項的整個寬度 */
+    border: none; /* 移除按鈕的邊框 */
+    background: none; /* 移除按鈕的背景色 */
+    border-radius: 5px;
+    text-align: center;
+    margin: 0;
+  }
+  
+  #toggleBtn {
+    font-size: 20px;
+    position: fixed;
+    left: 10px;
+    top: 45%;
+    z-index: 3; /* 將按鈕浮在清單上方 */
+    transition: left 0.5s ease;
+    border-radius: 5px;
+  }
+    </style>
+
+</head>
+<body>
+  
+
+  <div class="container">
+    <div id="sidebar"> 
+        <ul id="buttonList"></ul>
+    </div>
+    <div id="cesiumContainer"></div>
+  </div>
+
+  <button id="toggleBtn">想去哪裡</button>
+
+  <div id="toolbarContainer" class="toolbar-container">
+    <div id="toolbar" class="toolbar">     
+        <!-- 放大縮小按鈕 -->
+      <button id="btnZoomIn" type="button">放大</button>
+      <button id="btnZoomOut" type="button">縮小</button>
+        <!-- 輸入經緯度座標 -->
+      <input type="text" id="inputLatitude" placeholder="Latitude">
+      <input type="text" id="inputLongitude" placeholder="Longitude">
+      <input type="text" id="inputHeight" placeholder="Height">
+        <!-- 前往經緯度按鈕 -->
+      <button id="btnFlyToXYZ" type="button">Fly to Point</button>
+    </div>
+  </div>
+  
+  <script type="module">
+    // quickstart
+    Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI4NWJhZDVhYy0wYTIyLTQ1Y2YtODg3Yi00OTNlZDU2OGExN2EiLCJpZCI6MTY1OTQwLCJpYXQiOjE2OTQ1MDI0NTJ9.i4nK7nO3cRuAf7qEcxugViRX2UnCrCXR3pRwd7htz9Y';
+    const viewer = new Cesium.Viewer('cesiumContainer',
+      {
+       terrain: Cesium.Terrain.fromWorldTerrain(),
+      }
+    );
+    
+    // 新增建物清單
+    const buttonData = [
+    "理工學院",
+    "天文台",
+    "西門",     
+    "兵器公園",
+    "精神堡壘",
+    "學生宿舍",
+    "大禹樓",
+    "理學部",
+    "工學部",
+    "軍備大樓",
+    "研究大樓",
+    "行政大樓",
+    "體育館"
+    
+];
+  const buttonList = document.getElementById('buttonList');
+
+  buttonData.forEach((buttonText, index) => {
+  const button = document.createElement('button');
+  button.textContent = buttonText;
+  const buttonId = `button${index}`; // 生成獨一無二的 id，例如 button0, button1, ...
+  button.id = buttonId; // 將獨一無二的 id 賦予按鈕
+  const listItem = document.createElement('li');
+  listItem.appendChild(button);
+  buttonList.appendChild(listItem);
+});
+
+  // 加入openstreetmap建物模型
+  const osmBuildingsTileset = await Cesium.createOsmBuildingsAsync();
+  viewer.scene.primitives.add(osmBuildingsTileset);
+
+  // 加入標籤
+
+  
+
+ // Fly the camera to ccit at the given longitude, latitude, and height.
+  viewer.camera.flyTo({
+    destination: Cesium.Cartesian3.fromDegrees(  121.25997398629353,24.88435539748394, 800),
+    orientation: {
+    heading: Cesium.Math.toRadians(130.0),
+    pitch: Cesium.Math.toRadians(-30.0),      
+   }
+});
+
+document.getElementById('button0').addEventListener('click', function () {
+ // Fly the camera to 理工學院 at the given longitude, latitude, and height.
+  viewer.camera.flyTo({
+    destination: Cesium.Cartesian3.fromDegrees(  121.25997398629353,24.88435539748394, 800),
+    orientation: {
+    heading: Cesium.Math.toRadians(130.0),
+    pitch: Cesium.Math.toRadians(-30.0),      
+  }
+})
+});
+
+document.getElementById('button1').addEventListener('click', function () {
+  // Fly the camera to 天文台 at the given longitude, latitude, and height.
+  viewer.camera.flyTo({
+    destination: Cesium.Cartesian3.fromDegrees( 121.27157183847466,24.876578922494247,250),
+    orientation: {
+    heading: Cesium.Math.toRadians(90.0),
+    pitch: Cesium.Math.toRadians(-30.0),
+  }
+});
+});
+
+document.getElementById('button2').addEventListener('click', function () {
+  // Fly the camera to  at the given longitude, latitude, and height.
+  viewer.camera.flyTo({
+    destination: Cesium.Cartesian3.fromDegrees( 121.26448074054152,24.88050592003217, 250),
+    orientation: {
+    heading: Cesium.Math.toRadians(120.0),
+    pitch: Cesium.Math.toRadians(-30.0),
+  }
+});
+});
+
+document.getElementById('button3').addEventListener('click', function () {
+  // Fly the camera to  at the given longitude, latitude, and height.
+  viewer.camera.flyTo({
+    destination: Cesium.Cartesian3.fromDegrees( 121.26719809748003,24.874581294901823, 230),
+    orientation: {
+    heading: Cesium.Math.toRadians(200.0),
+    pitch: Cesium.Math.toRadians(-30.0),
+  }
+});
+});
+
+document.getElementById('button4').addEventListener('click', function () {
+  // Fly the camera to  at the given longitude, latitude, and height.
+  viewer.camera.flyTo({
+    destination: Cesium.Cartesian3.fromDegrees(  121.26801885344204,24.877632718733583, 250),
+    orientation: {
+    heading: Cesium.Math.toRadians(135.0),
+    pitch: Cesium.Math.toRadians(-30.0),
+  }
+});
+});
+
+document.getElementById('button5').addEventListener('click', function () {
+  // Fly the camera to  at the given longitude, latitude, and height.
+  viewer.camera.flyTo({
+    destination: Cesium.Cartesian3.fromDegrees( 121.26513816096436,24.878211848078422,  300),
+    orientation: {
+    heading: Cesium.Math.toRadians(180.0),
+    pitch: Cesium.Math.toRadians(-30.0),
+  }
+});
+});
+
+document.getElementById('button6').addEventListener('click', function () {
+  // Fly the camera to  at the given longitude, latitude, and height.
+  viewer.camera.flyTo({
+    destination: Cesium.Cartesian3.fromDegrees(  121.26992198364434, 24.87729184768719,300),
+    orientation: {
+    heading: Cesium.Math.toRadians(150.0),
+    pitch: Cesium.Math.toRadians(-30.0),
+  }
+});
+});
+
+document.getElementById('button7').addEventListener('click', function () {
+  // Fly the camera to  at the given longitude, latitude, and height.
+  viewer.camera.flyTo({
+    destination: Cesium.Cartesian3.fromDegrees( 121.2678686497341, 24.877004919984792, 300),
+    orientation: {
+    heading: Cesium.Math.toRadians(135.0),
+    pitch: Cesium.Math.toRadians(-30.0),
+  }
+});
+});
+
+document.getElementById('button8').addEventListener('click', function () {
+  // Fly the camera to  at the given longitude, latitude, and height.
+  viewer.camera.flyTo({
+    destination: Cesium.Cartesian3.fromDegrees( 121.2666684875588,24.87575237256486,  300),
+    orientation: {
+    heading: Cesium.Math.toRadians(135.0),
+    pitch: Cesium.Math.toRadians(-30.0),
+  }
+});
+});
+
+document.getElementById('button9').addEventListener('click', function () {
+  // Fly the camera to  at the given longitude, latitude, and height.
+  viewer.camera.flyTo({
+    destination: Cesium.Cartesian3.fromDegrees( 121.26696194014384, 24.87556138371729,270),
+    orientation: {
+    heading: Cesium.Math.toRadians(300.0),
+    pitch: Cesium.Math.toRadians(-35.0),
+  }
+});
+});
+
+document.getElementById('button10').addEventListener('click', function () {
+  // Fly the camera to  at the given longitude, latitude, and height.
+  viewer.camera.flyTo({
+    destination: Cesium.Cartesian3.fromDegrees( 121.26882351615316,24.876094849485984, 250),
+    orientation: {
+    heading: Cesium.Math.toRadians(135.0),
+    pitch: Cesium.Math.toRadians(-30.0),
+  }
+});
+});
+
+document.getElementById('button11').addEventListener('click', function () {
+  // Fly the camera to  at the given longitude, latitude, and height.
+  viewer.camera.flyTo({
+    destination: Cesium.Cartesian3.fromDegrees( 121.26939804780628, 24.87806143531702, 250),
+    orientation: {
+    heading: Cesium.Math.toRadians(315.0),
+    pitch: Cesium.Math.toRadians(-30.0),
+  }
+});
+});
+
+document.getElementById('button12').addEventListener('click', function () {
+  // Fly the camera to  at the given longitude, latitude, and height.
+  viewer.camera.flyTo({
+    destination: Cesium.Cartesian3.fromDegrees(  121.27070642686643,24.878513578280618, 250),
+    orientation: {
+    heading: Cesium.Math.toRadians(225.0),
+    pitch: Cesium.Math.toRadians(-30.0),
+  }
+});
+});
+
+document.getElementById('btnZoomIn').addEventListener('click', function () {
+  // Zoom In: Decrease the camera height
+  viewer.camera.moveForward(50); // Adjust the value according to your zoom preference
+  });
+  
+document.getElementById('btnZoomOut').addEventListener('click', function () {
+  // Zoom Out: Increase the camera height
+  viewer.camera.moveBackward(50); // Adjust the value according to your zoom preference
+});
+document.getElementById('btnFlyToXYZ').addEventListener('click', function () {
+  // Get latitude, longitude, and height values from input fields
+  var latitude = parseFloat(document.getElementById('inputLatitude').value);
+  var longitude = parseFloat(document.getElementById('inputLongitude').value);
+  var height = parseFloat(document.getElementById('inputHeight').value);
+
+  // Validate input values (you can add more validation as needed)
+  if (isNaN(latitude) || isNaN(longitude) || isNaN(height)) {
+    alert('Please enter valid numeric values for Latitude, Longitude, and Height.');
+    return;
+}
+
+  // Fly the camera to the specified point
+  viewer.camera.flyTo({
+  destination: Cesium.Cartesian3.fromDegrees(longitude, latitude, height),
+  orientation: {
+    heading: Cesium.Math.toRadians(0.0),
+    pitch: Cesium.Math.toRadians(-25.0),
+  }
+
+});
+});
+  //加載天文台點雲圖建築
+var cesiumContainer = document.getElementById('cesiumContainer');
+  const tileset = viewer.scene.primitives.add(
+  await Cesium.Cesium3DTileset.fromIonAssetId(2329591)
+);
+  
+  //將游標移到的建築反紅
+  
+const highlighted = {
+  feature: undefined,
+  originalColor: new Cesium.Color(),
+};
+// Color a feature red on hover.
+viewer.screenSpaceEventHandler.setInputAction(function onMouseMove(
+  movement
+) {
+  // If a feature was previously highlighted, undo the highlight
+  if (Cesium.defined(highlighted.feature)) {
+    highlighted.feature.color = highlighted.originalColor;
+    highlighted.feature = undefined;
+  }
+
+  // Pick a new feature
+  const pickedFeature = viewer.scene.pick(movement.endPosition);
+  if (!Cesium.defined(pickedFeature)) {
+    return;
+  }
+
+  // Highlight the feature
+  highlighted.feature = pickedFeature;
+  Cesium.Color.clone(pickedFeature.color, highlighted.originalColor);
+  pickedFeature.color = Cesium.Color.RED;
+},
+
+ Cesium.ScreenSpaceEventType.MOUSE_MOVE);  
+  // 展開及收回清單
+  const sidebar = document.getElementById('sidebar');
+  const toggleBtn = document.getElementById('toggleBtn');
+
+    toggleBtn.addEventListener('click', () => {
+    const sidebarLeft = parseInt(window.getComputedStyle(sidebar).left);
+    if (sidebarLeft < 0) {
+    sidebar.style.left = '0';
+    toggleBtn.style.left = '210px'; // 按鈕向右橫移
+    toggleBtn.textContent = '<';
+  } else {
+    sidebar.style.left = '-200px';
+    toggleBtn.style.left = '10px'; // 按鈕回到原始位置
+    toggleBtn.textContent = '想去哪裡';
+  }
+});
+
+// 定義建築物資料（經緯度和名稱）
+const buildings = [
+  { latitude: 24.87663, longitude: 121.27202, name: '天文台' },
+  { latitude: 24.88010, longitude: 121.26498, name: '西門' },
+  { latitude: 24.87390, longitude: 121.26677, name: '兵器公園' },
+  { latitude: 24.87720, longitude: 121.26848, name: '精神堡壘' },
+  { latitude: 24.87746, longitude: 121.26512, name: '第一宿舍' },
+  { latitude: 24.87675, longitude: 121.26513, name: '第二宿舍' },
+  { latitude: 24.87580, longitude: 121.26481, name: '第三宿舍' },
+  { latitude: 24.87651, longitude: 121.27027, name: '大禹樓' },
+  { latitude: 24.87634, longitude: 121.26847, name: '第一教學大樓' },
+  { latitude: 24.87525, longitude: 121.26728, name: '第二教學大樓' },
+  { latitude: 24.87587, longitude: 121.26646, name: '第三教學大樓' },
+  { latitude: 24.87575, longitude: 121.26923, name: '研究大樓' },
+  { latitude: 24.87840, longitude: 121.26895, name: '行政大樓' },
+  { latitude: 24.87781, longitude: 121.26724, name: '育樂中心' },
+  { latitude: 24.87895, longitude: 121.26821, name: '司令台' },
+  { latitude: 24.88036, longitude: 121.26869, name: '勤務連' },
+  { latitude: 24.87709, longitude: 121.26771, name: '圖書館' },
+  { latitude: 24.87964, longitude: 121.26736, name: '甲棟宿舍' },
+  { latitude: 24.87835, longitude: 121.27026, name: '體育館' },
+  { latitude: 24.87865, longitude: 121.27264, name: '第二餐廳' },
+  { latitude: 24.87799, longitude: 121.27195, name: '學員宿舍' },
+  { latitude: 24.87715, longitude: 121.26922, name: '中正堂' },
+  { latitude: 24.87496, longitude: 121.26813, name: '車輛館' },
+  { latitude: 24.87439, longitude: 121.26765, name: '兵器館' },
+  { latitude: 24.87327, longitude: 121.26538, name: '航空館' },
+  { latitude: 24.87386, longitude: 121.26430, name: '實驗工廠' },
+  { latitude: 24.87289, longitude: 121.26487, name: '火藥實驗室' },
+  { latitude: 24.87289, longitude: 121.26487, name: '燃燒化學館' },
+  { latitude: 24.87353, longitude: 121.26366, name: '飛安大樓' },
+  { latitude: 24.87338, longitude: 121.26396, name: '印刷所' },
+  { latitude: 24.87301, longitude: 121.26417, name: '風洞實驗室' },
+  { latitude: 24.87480, longitude: 121.26362, name: '風木公園' },
+  { latitude: 24.87670, longitude: 121.26624, name: '醫護所' },
+  { latitude: 24.87744, longitude: 121.26663, name: '餐廳' },
+  { latitude: 24.87931, longitude: 121.27389, name: '明德新村' },
+];
+
+// 使用迴圈在每個建築物上方添加標籤
+for (const building of buildings) {
+  viewer.entities.add({
+    position: Cesium.Cartesian3.fromDegrees(building.longitude, building.latitude, 240), // 建築物的經緯度和高度
+    label: {
+      text: building.name, // 標籤文字
+      font: '25px sans-serif', // 字體樣式
+      fillColor: Cesium.Color.WHITE, // 文字顏色
+      outlineColor: Cesium.Color.BLACK, // 文字輪廓顏色
+      outlineWidth: 3, // 文字輪廓寬度
+      style: Cesium.LabelStyle.FILL_AND_OUTLINE, // 標籤風格
+      verticalOrigin: Cesium.VerticalOrigin.BOTTOM, // 垂直對齊方式
+      pixelOffset: new Cesium.Cartesian2(0, -10), // 文字位置偏移量（向上偏移10像素，以顯示在建築物上方）
+    }
+  });
+}
+
+  </script>
+</body>
+</html>
