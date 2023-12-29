@@ -20,11 +20,36 @@
       width: 100vw;
       height: 100vh;
     }
-
+/* 
     #cesiumContainer {
       width: 100%;
       height: 100%;
-    }
+    } */
+
+    /* #cesiumContainer {
+  width: 100%;
+  height: 100%;
+  position: relative;
+} */
+
+#cesiumContainer {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+#result-container {
+  position: absolute;
+  bottom: 10px; /* 根據需要調整垂直位置 */
+  right: 10px; /* 根據需要調整水平位置 */
+  z-index: 999; /* 使result-container浮在最上層 */
+  background-color: rgba(255, 255, 255, 0.9);
+  padding: 10px;
+  border-radius: 5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+
 
     .toolbar-container {
       position: fixed;
@@ -91,19 +116,16 @@
       right: 10px;
       width: 10%;
       padding: 10px;
-      background-color: rgba(124, 182, 248, 0.795);
+      background-color: rgb(124, 182, 248);
       border: 1px solid #93e7d98c;
       z-index: 999;
       transition: all 0.3s ease; /* 添加過渡效果 */
     }
 
-    .close {
-  float: right;
-  font-size: 20px;
-  font-weight: bold;
-  cursor: pointer;
+ 
 
-}
+
+
   </style>
 
 </head>
@@ -139,7 +161,8 @@
     <div id="weatherContent"></div>
   </div>
   
-  
+        <!-- 用於顯示 API 結果的容器 -->
+        <div id="result-container" ></div>
 
   <script type="module">
 
@@ -149,11 +172,11 @@ function openWeatherPopup() {
   weatherPopup.style.display = 'block';
 }
 
-// 關閉天氣資訊視窗
-function closeWeatherPopup() {
-  const weatherPopup = document.getElementById('weatherPopup');
-  weatherPopup.style.display = 'none';
-}
+// // 關閉天氣資訊視窗
+// function closeWeatherPopup() {
+//   const weatherPopup = document.getElementById('weatherPopup');
+//   weatherPopup.style.display = 'none';
+// }
 
 
 
@@ -200,6 +223,167 @@ function closeWeatherPopup() {
       .catch(error => {
         console.error('取得天氣資料時發生錯誤:', error);
       });
+
+
+      var accessToken = null;
+        var tokenExpirationTime = null;
+
+        function sendRequest() {
+            // 如果沒有 Access Token 或 Access Token 已過期，重新取得
+            if (!accessToken || isTokenExpired()) {
+                getAccessToken();
+            } else {
+                // 呼叫 API 使用現有的 Access Token
+                callApi();
+            }
+        }
+
+        function getAccessToken() {
+            var url = 'https://tdx.transportdata.tw/auth/realms/TDXConnect/protocol/openid-connect/token';
+
+            var data = new URLSearchParams();
+            data.append('grant_type', 'client_credentials');
+            data.append('client_id', 'yuan900923-52513fb8-6a4c-43cd');
+            data.append('client_secret', '6cf7468f-6903-43c7-bc29-8efdb4f235a0');
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: data,
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Request failed with status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // 處理成功的回應
+                    accessToken = data.access_token;
+                    // 記錄 Access Token 的有效期
+                    tokenExpirationTime = Date.now() + (12 * 60 * 60 * 1000); // 12小時的有效期
+
+                    // 將 Access Token 輸出到 HTML 頁面上
+                    // var accessTokenContainer = document.createElement('div');
+                    // accessTokenContainer.textContent = 'Access Token: ' + accessToken;
+                    // document.body.appendChild(accessTokenContainer);
+
+                    // console.log('Access Token:', accessToken);
+
+                    // 呼叫 API 使用現有的 Access Token
+                    callApi();
+                })
+                .catch(error => {
+                    // 處理錯誤
+                    console.error(error);
+                });
+        }
+        function callApi() {
+            // 替換 YOUR_API_URL 為實際的 API 端點
+            var apiUri = 'https://tdx.transportdata.tw/api/basic/v2/Bus/EstimatedTimeOfArrival/City/Taoyuan/5053?%24format=JSON';
+            fetch(apiUri, {
+                method: 'GET',
+                headers: {
+                    'Authorization': 'Bearer ' + accessToken,
+                },
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`API request failed with status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // 處理 API 成功回應的邏輯
+
+
+                    // 過濾只顯示特定站點資訊
+                    var Ruiyuan = data.filter(stop => stop.StopName.Zh_tw === '瑞源');
+
+                    // 顯示資料在 HTML 頁面上
+                    displayBusData(Ruiyuan);
+                })
+                .catch(error => {
+                    // 處理 API 錯誤
+                    console.error('API Error:', error);
+                });
+        }
+
+        function displayBusData(busData) {
+            // 清除之前的資料顯示
+            var resultContainer = document.getElementById('result-container');
+            resultContainer.innerHTML = '';
+
+            // 創建表格元素
+            var table = document.createElement('table');
+            table.border = '1'; // 設定表格邊框
+
+            // 創建表格標題行
+            var headerRow = document.createElement('tr');
+            var routeHeaderCell = document.createElement('th');
+            routeHeaderCell.textContent = '瑞源站';
+            headerRow.appendChild(routeHeaderCell);
+
+            // 添加方向標題到表格標題行
+            var directionHeaderCell1 = document.createElement('th');
+            directionHeaderCell1.textContent = '往桃客總站';
+            headerRow.appendChild(directionHeaderCell1);
+
+            var directionHeaderCell2 = document.createElement('th');
+            directionHeaderCell2.textContent = '往龍潭站';
+            headerRow.appendChild(directionHeaderCell2);
+
+            // 將表格標題行添加到表格
+            table.appendChild(headerRow);
+
+            // 遍歷資料並在表格中顯示
+            busData.forEach(stop => {
+                
+                // 創建表格行
+
+                var stopInfoRow = document.createElement('tr');
+
+                // 將站牌名稱改為'5053'
+                var stopNameCell = document.createElement('td');
+                stopNameCell.textContent = '5053';
+                stopInfoRow.appendChild(stopNameCell);
+
+                // 添加方向對應的抵達時間到表格行
+                var directionCell1 = document.createElement('td');
+                var directionCell2 = document.createElement('td');
+
+                var directionText = stop.Direction === 0 ? '往龍潭站' : '往桃客總站';
+                var nextBusTime = new Date(stop.NextBusTime);
+                var timeString = nextBusTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true });
+                var estimateTime = stop.EstimateTime == null ? timeString : Math.round(stop.EstimateTime / 60) + ' 分鐘';
+
+                if (directionText === '往桃客總站') {
+                    directionCell1.textContent = estimateTime;
+                    
+                } else {
+                    directionCell2.textContent = estimateTime;
+                  
+                }
+
+                // 將表格儲存格添加到表格行
+                stopInfoRow.appendChild(directionCell1);
+                stopInfoRow.appendChild(directionCell2);
+
+                // 將表格行添加到表格
+                table.appendChild(stopInfoRow);
+            });
+
+            // 將結果顯示到 HTML 中
+            resultContainer.appendChild(table);
+            document.body.appendChild(resultContainer);
+        }
+        // 初始執行 sendRequest 函數
+        sendRequest();
+
+        // 設定每隔 4 小時重新抓取一次 Access Token
+        setInterval(getAccessToken, 4 * 60 * 60 * 1000);
 
 
 
@@ -541,6 +725,7 @@ function closeWeatherPopup() {
     }
 
   </script>
+
 </body>
 
 </html>

@@ -1,0 +1,14 @@
+###桃園市天氣預報資料
+GET https://opendata.cwa.gov.tw/api/v1/rest/datastore/F-C0032-001?Authorization=CWA-DEB4F3BD-FAB2-4EFF-8F71-87918CE0310E&format=JSON&locationName=%E6%A1%83%E5%9C%92%E5%B8%82&elementName=CI
+
+###大溪自動氣象站氣象觀測資料
+GET https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0001-001?Authorization=CWA-DEB4F3BD-FAB2-4EFF-8F71-87918CE0310E&StationId=C0C630
+
+### 桃園大溪當地未來2天天氣預報(逐三小時
+GET https://opendata.cwa.gov.tw/api/v1/rest/datastore/F-D0047-005?Authorization=CWA-DEB4F3BD-FAB2-4EFF-8F71-87918CE0310E&format=JSON&locationName=%E5%A4%A7%E6%BA%AA%E5%8D%80&elementName=
+
+###
+GET https://tdx.transportdata.tw/api/basic/v2/Bus/EstimatedTimeOfArrival/City/Taoyuan/5053?$format=JSON
+
+###
+GET  https://tdx.transportdata.tw/api/basic/v2/Bus/EstimatedTimeOfArrival/City/Taoyuan/5053?%24top=30&%24format=JSON

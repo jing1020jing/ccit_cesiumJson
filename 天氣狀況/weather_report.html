@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>daxiWeather</title>
+</head>
+
+<body>
+    <div id="weatherData"></div>
+
+    <script>
+        const apiUrl = 'https://opendata.cwa.gov.tw/api/v1/rest/datastore/F-D0047-005?Authorization=CWA-DEB4F3BD-FAB2-4EFF-8F71-87918CE0310E&format=JSON&locationName=%E5%A4%A7%E6%BA%AA%E5%8D%80&elementName=';
+        
+        // 選擇要顯示天氣資料的HTML元素
+        const weatherDataElement = document.getElementById('weatherData');
+        
+        fetch(apiUrl)
+          .then(response => {
+            if (!response.ok) {
+              throw new Error(`HTTP 錯誤！狀態碼: ${response.status}`);
+            }
+            return response.json();
+          })
+          .then(data => {
+            // 提取相關的天氣資訊
+            const city = data.records.locations[0].locationsName;
+            const location = data.records.locations[0].location[0].locationName;
+            const pop6h = data.records.locations[0].location[0].weatherElement[7].time[0].elementValue[0].value;
+            const weatherDescription=data.records.locations[0].location[0].weatherElement[1].time[0].elementValue[0].value;
+            const bodyTemperature=data.records.locations[0].location[0].weatherElement[2].time[0].elementValue[0].value;
+            const temperature=data.records.locations[0].location[0].weatherElement[3].time[0].elementValue[0].value;
+            const comfort=data.records.locations[0].location[0].weatherElement[5].time[0].elementValue[1].value;
+
+            // 創建用於顯示天氣資訊的HTML
+            const weatherHtml = `<p>地點: ${city}${location}</p>
+                                 <p>降雨機率: ${pop6h}%</p>
+                                 <p>天氣狀況: ${weatherDescription}</p>
+                                 <p>體感溫度: ${bodyTemperature}度</p>
+                                 <p>溫度: ${temperature}度</p>
+                                 <p>${comfort}</p>
+
+                                 `;
+        
+            // 更新HTML元素以顯示天氣資料
+            weatherDataElement.innerHTML = weatherHtml;
+          })
+          .catch(error => {
+            console.error('取得資料時發生錯誤:', error);
+          });
+        </script>
+
+</body>
+
+</html>
